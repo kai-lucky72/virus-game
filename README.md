@@ -1,44 +1,66 @@
 # Neural Strike: RCA Cybersecurity Final Project
 
-Developed for Rwanda Coding Academy - March 2026
+*Developed for Rwanda Coding Academy - March 2026*
 
-## Overview
+This project demonstrates a multi-stage "Trojan Horse" attack simulation, featuring a custom Dino Jump game, a persistent interactive reverse shell, and a dedicated security cleanup tool.
 
-This project is a multi-component cybersecurity simulation featuring a "Trojaned" Dino Jump game, an interactive reverse shell, and a persistence management system.
+---
 
-## Components & Usage
+## 1. Installation & Setup
 
-### 1. The Game (Target Side)
+### For the Attacker (Teacher/Attacker Machine)
 
-**Location**: `dist/NeuralStrike.exe`
+1. **Requirements**: Python 3.x installed.
+2. **Steps**:
+    - Copy `attacker.py` to your machine.
+    - Open a terminal and run: `python attacker.py`
+    - The console will display `[*] Listening for incoming NeuralStrike connections...`.
+3. **Network**: Ensure you are on the same Wi-Fi as the target machine. Note your IP (default: `10.12.74.152`).
 
-- **Action**: Launch this on the Windows machine.
-- **Grading Feature**: It will first show a **Disclaimer** (Requirement 1) and then a **Dependency Staging** progress bar before starting the game.
+### For the Target (Victim Machine)
 
-### 2. The Master Console (Attacker Side)
+1. **Requirements**: Windows 10/11.
+2. **Steps**:
+    - Run `dist\NeuralStrike.exe`.
+3. **The Trigger**: The backdoor will automatically attempt to "phone home" to the attacker's IP. If it fails, use the **F1** manual override to type the attacker's IP.
 
-**Location**: `attacker.py`
+---
 
-- **Action**: Copy this to your Kali Linux VM.
-- **Execution**: `python3 attacker.py`
-- **Feature**: This provides the "Listener" that gives you full shell access to the Windows target.
+## 2. The Gaming Process (User Experience)
 
-### 3. The Remover (Safety Tool)
+To the victim, the application appears as a legitimate high-performance game:
 
-**Location**: `dist/PersistenceRemover.exe`
+- **Phase 1: Disclaimer**: A professional `tkinter` modal notifies the user about the simulation's intent before anyone proceeds.
+- **Phase 2: Dependency Staging**: A dynamic progress bar simulates the installation of "required media components" (VLC). This provides cover for the background backdoor initialization.
+- **Phase 3: The Game**: A fully playable "Dino Jump" clone. While the user is focused on the gameplay, the shell connection is established silently in a separate non-daemon thread.
 
-- **Action**: Run this to clean up the system. It removes the Registry keys and AppData files added by the game.
+---
 
-## Grading Highlights
+## 4. Attack Methodology & Persistence
 
-- **User Notification**: Implemented via a `tkinter` modal at launch.
-- **Dependency Download**: Simulated via a dynamic progress bar staging scene.
-- **Persistence**: Implemented via `HKCU\...\Run` registry keys and `%APPDATA%\DinoGame` nesting.
-- **No Interruption**: High-performance game loop using `pygame` with background operations on a separate daemon thread.
-- **Interactive Shell**: Full command execution and output return to the Kali listener.
+This project satisfies all RCA technical requirements:
 
-## Ethical Considerations & Defensive Measures
+- **Interactive Reverse Shell**: Unlike a basic beacon, this shell supports real-time commands, `cd` directory traversal, and robust error handling.
+- **Reboot Persistence**: The Trojan copies itself to `%APPDATA%\DinoGame` and creates a **Registry Run Key** (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run\NeuralStrike`).
+- **Survivability**: Even if the game window is closed, the backdoor thread continues to run in the background. If the system restarts, the Trojan launches automatically upon user login.
 
-- **Prevention**: Use EDR (Endpoint Detection and Response) or Antivirus to flag suspicious Registry modifications. Monitor outgoing traffic to port 4444.
-- **Detection**: Check `regedit` under `CurrentVersion\Run` for unknown entries.
-- **Ethics**: This project is for **educational use only** at RCA. The disclaimer ensures no user is tricked during the simulation.
+---
+
+## 5. Detection & Prevention (Defensive Measures)
+
+How to defend against attacks like Neural Strike:
+
+- **Registry Monitoring**: Legitimate games rarely need to add themselves to the "Run" keys. Use EDR tools to flag unauthorized registry modifications.
+- **Network Filtering**: Block outgoing traffic on non-standard ports (like 4444). Implement a strict "Default Deny" firewall policy.
+- **File Integrity**: Modern antivirus (Windows Defender) uses behavioral analysis to detect programs that spawn "hidden" subprocesses or "phone home" to private IP addresses.
+
+---
+
+## 6. Ethical Considerations
+
+- **Intended Use**: This project is strictly for educational purposes within the RCA Cybersecurity curriculum.
+- **Consent**: The inclusion of a mandatory pre-execution disclaimer ensures that all participants are informed of the simulation's nature.
+- **Safety**: A dedicated `PersistenceRemover.exe` has been provided to ensure the target machine can be restored to a clean state immediately after the demo.
+
+---
+**RCA GRADING PROOF**: [Grading Sheet](file:///C:/Users/Lamelo/.gemini/antigravity/brain/2c840330-111b-48fb-a5ed-cc75a838de85/grading_proof.md)
