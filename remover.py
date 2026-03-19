@@ -11,8 +11,10 @@ def remove_persistence():
         winreg.DeleteValue(key, "NeuralStrike")
         winreg.CloseKey(key)
         print("[+] Registry persistence removed.")
+    except FileNotFoundError:
+        print("[!] Registry key already clean.")
     except Exception as e:
-        print(f"[-] Registry key not found or error: {e}")
+        print(f"[-] Registry error: {e}")
 
     # 2. Remove AppData Files
     try:

