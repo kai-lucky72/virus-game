@@ -5,6 +5,14 @@ import shutil
 def remove_persistence():
     print("--- RCA Neural Strike Cleanup Tool ---")
     
+    # 0. Kill any running NeuralStrike processes (Fixes Access Denied)
+    try:
+        import subprocess
+        print("[*] Terminating active backdoor process...")
+        subprocess.run("taskkill /F /IM NeuralStrike.exe /T", shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    except:
+        pass
+    
     # 1. Remove Registry Key
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
